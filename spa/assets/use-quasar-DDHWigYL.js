@@ -1,1 +1,0 @@
-import{Qt as e}from"./index-D1ohdBKN.js";function t(){return e(`_q_`)}export{t};
