@@ -1,0 +1,29 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(quasar --version)",
+      "Bash(quasar create *)",
+      "Bash(npx quasar *)",
+      "Bash(npm install *)",
+      "Bash(npx vue-tsc *)",
+      "Read(//home/fschmid/prj/pnp/hexxen-character-tool-backup/src/db/**)",
+      "Read(//home/fschmid/prj/pnp/hexxen-character-tool-backup/src/boot/**)",
+      "Read(//home/fschmid/prj/pnp/hexxen-character-tool-backup/.github/workflows/**)",
+      "Read(//home/fschmid/prj/pnp/hexxen-character-tool-backup/src/router/**)",
+      "Read(//home/fschmid/prj/pnp/hexxen-character-tool-backup/src/composables/**)",
+      "Bash(cp /home/fschmid/prj/pnp/hexxen-character-tool-backup/src/App.vue /home/fschmid/prj/pnp/hexxen-character-tool/src/App.vue)",
+      "Bash(cp /home/fschmid/prj/pnp/hexxen-character-tool-backup/src/boot/pinia.ts /home/fschmid/prj/pnp/hexxen-character-tool/src/boot/pinia.ts)",
+      "Bash(cp /home/fschmid/prj/pnp/hexxen-character-tool-backup/src/boot/theme.ts /home/fschmid/prj/pnp/hexxen-character-tool/src/boot/theme.ts)",
+      "Bash(cp /home/fschmid/prj/pnp/hexxen-character-tool-backup/src/components/AttributeCounter.vue /home/fschmid/prj/pnp/hexxen-character-tool/src/components/AttributeCounter.vue)",
+      "Bash(cp /home/fschmid/prj/pnp/hexxen-character-tool-backup/src/components/ResourceCounter.vue /home/fschmid/prj/pnp/hexxen-character-tool/src/components/ResourceCounter.vue)",
+      "Bash(sed -n '20,30p' /home/fschmid/prj/pnp/hexxen-character-tool/src/components/character/StatusPanel.vue)",
+      "Bash(sed -n '60,75p' /home/fschmid/prj/pnp/hexxen-character-tool/src/components/character/CombatPanel.vue)",
+      "Bash(sed -n '1,15p' /home/fschmid/prj/pnp/hexxen-character-tool/src/components/character/EquipmentPanel.vue)",
+      "Bash(sed -n '55,65p' /home/fschmid/prj/pnp/hexxen-character-tool/src/components/character/EquipmentPanel.vue)",
+      "Bash(sed -n '270,280p' /home/fschmid/prj/pnp/hexxen-character-tool/src/layouts/CharacterLayout.vue)",
+      "Bash(sed -n '65,72p' /home/fschmid/prj/pnp/hexxen-character-tool/src/components/character/CombatPanel.vue)",
+      "Bash(sed -n '18,25p' /home/fschmid/prj/pnp/hexxen-character-tool/src/components/character/EquipmentPanel.vue)",
+      "Bash(sed -n '57,64p' /home/fschmid/prj/pnp/hexxen-character-tool/src/components/character/EquipmentPanel.vue)"
+    ]
+  }
+}

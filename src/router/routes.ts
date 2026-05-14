@@ -1,18 +1,24 @@
-import type { RouteRecordRaw } from 'vue-router';
+import type { RouteRecordRaw } from 'vue-router'
 
 const routes: RouteRecordRaw[] = [
   {
     path: '/',
     component: () => import('layouts/MainLayout.vue'),
-    children: [{ path: '', component: () => import('pages/IndexPage.vue') }],
+    children: [
+      { path: '', component: () => import('pages/DashboardView.vue') },
+      { path: 'characters', component: () => import('pages/CharacterListView.vue') },
+      { path: 'compendium', component: () => import('pages/CompendiumListView.vue') },
+    ],
   },
-
-  // Always leave this as last one,
-  // but you can also remove it
+  {
+    // Charakter-Detail hat ein eigenes Layout mit sticky Stats-Header
+    path: '/characters/:id',
+    component: () => import('layouts/CharacterLayout.vue'),
+  },
   {
     path: '/:catchAll(.*)*',
-    component: () => import('pages/ErrorNotFound.vue'),
+    redirect: '/',
   },
-];
+]
 
-export default routes;
+export default routes

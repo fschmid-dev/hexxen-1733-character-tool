@@ -1,1 +1,106 @@
-// app global css
+// HeXXen 1733 – Globale Styles
+
+// Nummer-Input: Browser-Pfeile ausblenden
+input[type=number]::-webkit-outer-spin-button,
+input[type=number]::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+input[type=number] { -moz-appearance: textfield; }
+
+// Touch-Targets für Counter am Spieltisch
+.counter-btn {
+  min-width: 44px;
+  min-height: 44px;
+}
+
+// Kompakte Skill-Zeilen
+.skill-row {
+  // Kein eigener Rahmen – Trennlinie kommt vom Elternelement .skills-grid > div
+}
+
+// Stats-Box im Header (dunkler Hintergrund → halbtransparent weiß)
+.stats-box {
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  border-radius: 8px;
+}
+
+// Label über Stat-Werten
+.stat-label {
+  font-size: 9px;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  opacity: 0.65;
+  margin-bottom: 2px;
+  line-height: 1.3;
+}
+
+// Content-Frame: zentriert, nicht volle Breite auf Desktop
+.char-content-frame {
+  max-width: 860px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+// Ausbaukraft-Nodes
+.power-node {
+  &--stamm   { border-left: 3px solid #c0682b; }
+  &--geselle { border-left: 3px solid #4caf50; }
+  &--experte { border-left: 3px solid #2196f3; }
+  &--meister { border-left: 3px solid #9c27b0; }
+}
+
+// Alternierende Zeilen in Listen
+.q-list .q-item:nth-child(even) {
+  background-color: rgba(0, 0, 0, 0.025);
+}
+
+// Kompaktes Zahl-Input im Header (dunkler Hintergrund)
+.stat-num-input {
+  width: 40px;
+  height: 26px;
+  text-align: center;
+  background: rgba(255, 255, 255, 0.15);
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  border-radius: 4px;
+  color: white;
+  font-size: 13px;
+  font-weight: bold;
+  padding: 0 4px;
+  outline: none;
+  &:focus { border-color: rgba(255, 255, 255, 0.85); }
+}
+
+// Zweispaltige Fertigkeiten: Trennlinien zwischen Einträgen + Desktop-Spaltentrenner
+.skills-grid > div {
+  border-bottom: 1px solid rgba(0, 0, 0, 0.12);
+  &:last-child { border-bottom: none; }
+}
+
+@media (min-width: 600px) {
+  .skills-grid > div:nth-child(odd) {
+    border-right: 1px solid rgba(0, 0, 0, 0.12);
+  }
+  .skills-grid > div:nth-last-child(-n+2) {
+    border-bottom: none;
+  }
+}
+
+// Dark Mode
+.body--dark {
+  // text-primary (dunkles Teal) → secondary (helles Blau) für Lesbarkeit
+  .text-primary { color: #35b9e9 !important; }
+
+  // Eingabefelder: Label und Unterstrich beim Fokus in helles Blau
+  // outlined-Variante ausgenommen, da ::after dort den gesamten Hintergrund füllt
+  .q-field--highlighted .q-field__label { color: #35b9e9 !important; }
+  .q-field--highlighted:not(.q-field--outlined) .q-field__control::after { background: #35b9e9 !important; }
+
+  // Fertigkeits-Trennlinien: helles Weiß statt schwarzes Schwarz
+  .skills-grid > div {
+    border-bottom-color: rgba(255, 255, 255, 0.12);
+  }
+  @media (min-width: 600px) {
+    .skills-grid > div:nth-child(odd) {
+      border-right-color: rgba(255, 255, 255, 0.12);
+    }
+  }
+}
