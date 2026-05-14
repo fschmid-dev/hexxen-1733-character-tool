@@ -28,7 +28,7 @@ export default defineConfig((/* ctx */) => {
       },
 
       vueRouterMode: 'hash',
-      publicPath: '/hexxen-character-tool/',
+      publicPath: '/hexxen-1733-character-tool/',
 
       vitePlugins: [
         ['vite-plugin-checker', {
