@@ -1,0 +1,1 @@
+import{Qt as e}from"./index-DOtq_bRb.js";function t(){return e(`_q_`)}export{t};
