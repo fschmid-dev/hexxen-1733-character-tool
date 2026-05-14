@@ -1,0 +1,1 @@
+import{Qt as e}from"./index-Y7EUskID.js";function t(){return e(`_q_`)}export{t};

@@ -1,0 +1,1 @@
+import{yt as e}from"./index-Y7EUskID.js";import{t}from"./wrappers-BGB7uR83.js";var n=`hexxen-theme`,r=t(()=>{let t=localStorage.getItem(n);t===`dark`?e.set(!0):t===`light`&&e.set(!1)});export{r as default};
