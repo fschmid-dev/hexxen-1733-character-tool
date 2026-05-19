@@ -17,7 +17,7 @@
       </q-card-section>
     </q-card>
 
-    <!-- Ressourcen: 2 auf Mobile, 4 auf Desktop -->
+    <!-- Ressourcen -->
     <div class="text-overline text-primary q-mb-xs">Ressourcen</div>
     <q-card flat bordered>
       <q-card-section class="q-pa-xs">
@@ -27,13 +27,14 @@
               :label="res.label" :value="char.resources[res.key]" :max-value="res.maxValue"
               @increment="store.updateResource(res.key, char.resources[res.key] + 1)"
               @decrement="store.updateResource(res.key, char.resources[res.key] - 1)"
+              @set-value="v => store.updateResource(res.key, v)"
             />
           </div>
         </div>
       </q-card-section>
     </q-card>
 
-    <!-- Anhaltende Einflüsse: 2 auf Mobile, 4 auf Desktop -->
+    <!-- Anhaltende Einflüsse -->
     <div class="text-overline text-primary q-mb-xs">Anhaltende Einflüsse</div>
     <q-card flat bordered>
       <q-card-section class="q-pa-xs">
@@ -49,7 +50,7 @@
       </q-card-section>
     </q-card>
 
-    <!-- Heilungsfaktor: untereinander auf Mobile, nebeneinander auf Desktop -->
+    <!-- Heilungsfaktor -->
     <div class="text-overline text-primary q-mb-xs">Heilungsfaktor</div>
     <q-card flat bordered>
       <q-card-section class="q-pa-sm">
@@ -75,6 +76,34 @@
         </div>
       </q-card-section>
     </q-card>
+
+    <!-- Verbrauchsmittel (nur wenn vorhanden und mit showOnStatus) -->
+    <template v-if="statusItems.length > 0">
+      <div class="text-overline text-primary q-mb-xs">Verbrauchsmittel</div>
+      <q-card flat bordered>
+        <q-list separator dense>
+          <q-item v-for="item in statusItems" :key="item.id">
+            <q-item-section>
+              <div class="row items-center q-gutter-sm">
+                <div class="col text-body2">{{ item.name }}</div>
+                <div v-if="item.notes" class="text-caption text-grey-5 col-12" v-html="item.notes" />
+              </div>
+            </q-item-section>
+            <q-item-section side>
+              <div class="row items-center q-gutter-xs no-wrap">
+                <q-btn flat dense round icon="remove" size="xs"
+                  @click="store.updateInventoryItem(item.id, { quantity: Math.max(0, item.quantity - 1) })" />
+                <span class="text-subtitle2 text-weight-bold" style="min-width:24px;text-align:center">
+                  {{ item.quantity }}
+                </span>
+                <q-btn flat dense round icon="add" size="xs"
+                  @click="store.updateInventoryItem(item.id, { quantity: item.quantity + 1 })" />
+              </div>
+            </q-item-section>
+          </q-item>
+        </q-list>
+      </q-card>
+    </template>
 
   </div>
 </template>
@@ -103,14 +132,14 @@ const resourceList = computed(() => {
   const c = char.value
   if (!c) return []
   return [
-    { key: 'ambition'            as const, label: 'Ambition'                      },
-    { key: 'rage'                as const, label: 'Rage'                           },
-    { key: 'segnung'             as const, label: 'Segnung'                        },
-    { key: 'quintessenz'         as const, label: 'Quintessenz'                    },
-    { key: 'ideen'               as const, label: `Ideen (max ${store.maxIdeen})`, maxValue: store.maxIdeen },
-    { key: 'coups'               as const, label: `Coups (max ${store.maxCoups})`, maxValue: store.maxCoups },
-    { key: 'verderbnis'          as const, label: 'Verderbnis'                     },
-    { key: 'konstruktionspunkte' as const, label: 'KP'                             },
+    { key: 'ambition'            as const, label: 'Ambition'                                   },
+    { key: 'rage'                as const, label: 'Rage'                                        },
+    { key: 'segnung'             as const, label: 'Segnung'                                     },
+    { key: 'quintessenz'         as const, label: 'Quintessenz'                                 },
+    { key: 'ideen'               as const, label: 'Ideen',    maxValue: store.maxIdeen          },
+    { key: 'coups'               as const, label: 'Coups',    maxValue: store.maxCoups          },
+    { key: 'verderbnis'          as const, label: 'Verderbnis'                                  },
+    { key: 'konstruktionspunkte' as const, label: 'KP'                                          },
   ]
 })
 
@@ -120,4 +149,8 @@ const statusEffects: { key: keyof NonNullable<typeof char.value>['statusEffects'
   { key: 'internalDamage', label: 'Inn. Schaden'   },
   { key: 'paralysis',      label: 'Lähmung'        },
 ]
+
+const statusItems = computed(() =>
+  char.value?.inventory.filter(i => i.showOnStatus) ?? [],
+)
 </script>

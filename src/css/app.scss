@@ -84,10 +84,23 @@ input[type=number] { -moz-appearance: textfield; }
   }
 }
 
+// Hervorgehobener Text: Sekundärfarbe als Hintergrund → schwarzer Text + Innenabstand
+[style*="background-color: rgb(53, 185, 233)"],
+[style*="background-color: #35b9e9"] {
+  color: #000 !important;
+  padding: 0 3px;
+  border-radius: 2px;
+  * { color: inherit !important; }
+}
+
 // Dark Mode
 .body--dark {
   // text-primary (dunkles Teal) → secondary (helles Blau) für Lesbarkeit
   .text-primary { color: #35b9e9 !important; }
+
+  // q-select / q-menu: aktiver/ausgewählter Eintrag in lesbares Blau umfärben
+  // (verhindert dunkles Primary-Teal auf dunklem Hintergrund)
+  .q-item--active { color: #35b9e9 !important; }
 
   // Eingabefelder: Label und Unterstrich beim Fokus in helles Blau
   // outlined-Variante ausgenommen, da ::after dort den gesamten Hintergrund füllt

@@ -1,14 +1,14 @@
 <template>
   <q-dialog :model-value="modelValue" maximized @update:model-value="$emit('update:modelValue', $event)">
-    <q-card>
-      <q-card-section class="row items-center bg-primary text-white q-pa-sm">
+    <q-card class="column" style="height: 100%">
+      <q-card-section class="row items-center bg-primary text-white q-pa-sm" style="flex: 0 0 auto">
         <q-icon name="menu_book" class="q-mr-sm" />
         <div class="text-h6 col">Journal</div>
         <q-btn flat round dense icon="close" v-close-popup />
       </q-card-section>
 
       <!-- Suche + Tag-Filter -->
-      <q-card-section class="q-pa-sm q-pb-none">
+      <q-card-section class="q-pa-sm q-pb-none" style="flex: 0 0 auto">
         <div class="row q-gutter-sm items-center">
           <q-input
             v-model="search" placeholder="Suchen..." dense outlined clearable class="col"
@@ -30,12 +30,12 @@
       </q-card-section>
 
       <!-- Notizen-Liste -->
-      <q-card-section class="q-pa-sm" style="overflow-y:auto; flex:1">
+      <q-card-section class="q-pa-sm col" style="overflow-y: auto">
         <div v-if="filteredNotes.length === 0" class="text-grey-5 text-center q-mt-lg">
           <q-icon name="note_add" size="48px" />
           <div class="q-mt-sm text-body2">{{ search ? 'Keine Treffer' : 'Noch keine Notizen' }}</div>
         </div>
-        <div class="q-gutter-sm">
+        <div v-else class="q-gutter-sm">
           <q-card
             v-for="note in filteredNotes" :key="note.id"
             flat bordered clickable
@@ -70,8 +70,16 @@
         </q-card-section>
         <q-card-section class="q-gutter-sm q-pa-md">
           <q-input v-model="noteForm.title" label="Titel" dense autofocus />
-          <q-input v-model="noteForm.tagsInput" label="Tags (kommagetrennt)" dense
-            hint="z.B. Kampf, NPC, Hinweis" />
+          <!-- Tags: Autocomplete mit bestehenden Tags -->
+          <q-select
+            v-model="noteForm.tags"
+            :options="allTags"
+            label="Tags"
+            dense multiple use-input use-chips new-value-mode="add-unique"
+            input-debounce="0"
+            hint="Tags eingeben und Enter drücken"
+            @new-value="(v, done) => done(v, 'add-unique')"
+          />
           <div class="text-caption text-grey-6 q-mb-xs">Inhalt</div>
           <q-editor v-model="noteForm.content" min-height="12rem" />
         </q-card-section>
@@ -109,29 +117,29 @@ const filteredNotes = computed(() => {
   let notes = char.value?.journalNotes ?? []
   if (activeTag.value) notes = notes.filter(n => n.tags.includes(activeTag.value))
   if (!search.value.trim()) return notes
-  const fuse = new Fuse(notes, { keys: ['title', 'tags'], threshold: 0.4 })
+  // Suche in Titel, Tags und Inhalt (HTML-Tags werden dabei mitgesucht, trifft aber den Text)
+  const fuse = new Fuse(notes, { keys: ['title', 'tags', 'content'], threshold: 0.4 })
   return fuse.search(search.value).map(r => r.item)
 })
 
 const showNoteDialog = ref(false)
 const editingNote = ref<JournalNote | null>(null)
-const noteForm = ref({ title: '', content: '', tagsInput: '' })
+const noteForm = ref<{ title: string; content: string; tags: string[] }>({ title: '', content: '', tags: [] })
 
 function openNewNote() {
   editingNote.value = null
-  noteForm.value = { title: '', content: '', tagsInput: '' }
+  noteForm.value = { title: '', content: '', tags: [] }
   showNoteDialog.value = true
 }
 
 function openEditNote(note: JournalNote) {
   editingNote.value = note
-  noteForm.value = { title: note.title, content: note.content, tagsInput: note.tags.join(', ') }
+  noteForm.value = { title: note.title, content: note.content, tags: [...note.tags] }
   showNoteDialog.value = true
 }
 
 function saveNote() {
-  const tags = noteForm.value.tagsInput.split(',').map(t => t.trim()).filter(Boolean)
-  const data = { title: noteForm.value.title, content: noteForm.value.content, tags }
+  const data = { title: noteForm.value.title, content: noteForm.value.content, tags: noteForm.value.tags }
   if (editingNote.value) store.updateJournalNote(editingNote.value.id, data)
   else store.addJournalNote(data)
   showNoteDialog.value = false

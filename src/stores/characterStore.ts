@@ -2,10 +2,10 @@ import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import { uid } from 'quasar'
 import type {
-  Character, Skill, Weapon, ClothingSet,
+  Character, Skill, WeaponSkill, Weapon, ClothingSet,
   InventoryItem, AcquiredPower, GameEffect, JournalNote, Companion, ManualBonus,
 } from 'src/types/character'
-import { createNewCharacter, SCHEMA_VERSION } from 'src/types/character'
+import { createNewCharacter, migrateCharacter, SCHEMA_VERSION } from 'src/types/character'
 import {
   loadAllCharacters, saveCharacter, deleteCharacter as dbDeleteCharacter,
 } from 'src/db/database'
@@ -60,6 +60,11 @@ export const useCharacterStore = defineStore('character', () => {
   const maxIdeen = computed<number>(() => activeCharacter.value?.attributes.wis ?? 0)
   const maxCoups = computed<number>(() => activeCharacter.value?.attributes.ath ?? 0)
 
+  function activeBonusTotal(bonuses?: ManualBonus[]): number {
+    if (!bonuses?.length) return 0
+    return bonuses.filter(b => b.active).reduce((sum, b) => sum + b.value, 0)
+  }
+
   function skillTotal(skillId: string): number {
     const c = activeCharacter.value
     if (!c) return 0
@@ -67,8 +72,7 @@ export const useCharacterStore = defineStore('character', () => {
     const skill = allSkills.find(s => s.id === skillId)
     if (!skill) return 0
     const attrVal = c.attributes[skill.baseAttribute] ?? 0
-    const bonus = skill.manualBonus?.value ?? 0
-    return skill.value + attrVal + bonus
+    return skill.value + attrVal + activeBonusTotal(skill.manualBonuses)
   }
 
   // ---------------------------------------------------------------------------
@@ -89,7 +93,19 @@ export const useCharacterStore = defineStore('character', () => {
   // Charakter-Verwaltung
   // ---------------------------------------------------------------------------
   async function loadFromDB(): Promise<void> {
-    characters.value = await loadAllCharacters()
+    const raw = await loadAllCharacters()
+    // Migration und Speicherung VOR der reaktiven Zuweisung (Proxy-Problem vermeiden)
+    const ready: Character[] = []
+    for (const c of raw) {
+      if (c.schemaVersion < SCHEMA_VERSION) {
+        const migrated = migrateCharacter(c as unknown as Record<string, unknown>)
+        await saveCharacter(migrated)   // plain object, kein Proxy
+        ready.push(migrated)
+      } else {
+        ready.push(c)
+      }
+    }
+    characters.value = ready
     if (characters.value.length > 0 && !activeCharacterId.value) {
       activeCharacterId.value = characters.value[0]!.id
     }
@@ -168,13 +184,45 @@ export const useCharacterStore = defineStore('character', () => {
     })
   }
 
-  function setSkillBonus(skillId: string, bonus: ManualBonus | undefined): void {
+  function addSkillBonus(skillId: string, bonus: Omit<ManualBonus, 'id'>): void {
     _mutate(c => {
       const skill = [...c.skills.general, ...c.skills.fighting].find(s => s.id === skillId)
       if (skill) {
-        if (bonus !== undefined) skill.manualBonus = bonus
-        else delete skill.manualBonus
+        if (!skill.manualBonuses) skill.manualBonuses = []
+        skill.manualBonuses.push({ ...bonus, id: uid() })
       }
+    })
+  }
+
+  function updateSkillBonus(skillId: string, bonusId: string, data: Partial<Omit<ManualBonus, 'id'>>): void {
+    _mutate(c => {
+      const skill = [...c.skills.general, ...c.skills.fighting].find(s => s.id === skillId)
+      const bonus = skill?.manualBonuses?.find(b => b.id === bonusId)
+      if (bonus) Object.assign(bonus, data)
+    })
+  }
+
+  function removeSkillBonus(skillId: string, bonusId: string): void {
+    _mutate(c => {
+      const skill = [...c.skills.general, ...c.skills.fighting].find(s => s.id === skillId)
+      if (skill?.manualBonuses) {
+        skill.manualBonuses = skill.manualBonuses.filter(b => b.id !== bonusId)
+      }
+    })
+  }
+
+  function toggleSkillBonus(skillId: string, bonusId: string): void {
+    _mutate(c => {
+      const skill = [...c.skills.general, ...c.skills.fighting].find(s => s.id === skillId)
+      const bonus = skill?.manualBonuses?.find(b => b.id === bonusId)
+      if (bonus) bonus.active = !bonus.active
+    })
+  }
+
+  function reorderFightingSkills(orderedIds: string[]): void {
+    _mutate(c => {
+      const map = new Map(c.skills.fighting.map(s => [s.id, s]))
+      c.skills.fighting = orderedIds.map(id => map.get(id)).filter(Boolean) as WeaponSkill[]
     })
   }
 
@@ -206,6 +254,46 @@ export const useCharacterStore = defineStore('character', () => {
 
   function removeWeapon(id: string): void {
     _mutate(c => { c.weapons = c.weapons.filter(w => w.id !== id) })
+  }
+
+  function reorderWeapons(orderedIds: string[]): void {
+    _mutate(c => {
+      const map = new Map(c.weapons.map(w => [w.id, w]))
+      c.weapons = orderedIds.map(id => map.get(id)).filter(Boolean) as Weapon[]
+    })
+  }
+
+  function addWeaponBonus(weaponId: string, bonus: Omit<ManualBonus, 'id'>): void {
+    _mutate(c => {
+      const w = c.weapons.find(x => x.id === weaponId)
+      if (w) {
+        if (!w.manualBonuses) w.manualBonuses = []
+        w.manualBonuses.push({ ...bonus, id: uid() })
+      }
+    })
+  }
+
+  function updateWeaponBonus(weaponId: string, bonusId: string, data: Partial<Omit<ManualBonus, 'id'>>): void {
+    _mutate(c => {
+      const w = c.weapons.find(x => x.id === weaponId)
+      const bonus = w?.manualBonuses?.find(b => b.id === bonusId)
+      if (bonus) Object.assign(bonus, data)
+    })
+  }
+
+  function removeWeaponBonus(weaponId: string, bonusId: string): void {
+    _mutate(c => {
+      const w = c.weapons.find(x => x.id === weaponId)
+      if (w?.manualBonuses) w.manualBonuses = w.manualBonuses.filter(b => b.id !== bonusId)
+    })
+  }
+
+  function toggleWeaponBonus(weaponId: string, bonusId: string): void {
+    _mutate(c => {
+      const w = c.weapons.find(x => x.id === weaponId)
+      const bonus = w?.manualBonuses?.find(b => b.id === bonusId)
+      if (bonus) bonus.active = !bonus.active
+    })
   }
 
   // ---------------------------------------------------------------------------
@@ -252,6 +340,13 @@ export const useCharacterStore = defineStore('character', () => {
     _mutate(c => { c.inventory = c.inventory.filter(i => i.id !== id) })
   }
 
+  function reorderInventory(orderedIds: string[]): void {
+    _mutate(c => {
+      const map = new Map(c.inventory.map(i => [i.id, i]))
+      c.inventory = orderedIds.map(id => map.get(id)).filter(Boolean) as InventoryItem[]
+    })
+  }
+
   // ---------------------------------------------------------------------------
   // Gefolge
   // ---------------------------------------------------------------------------
@@ -284,21 +379,15 @@ export const useCharacterStore = defineStore('character', () => {
     })
   }
 
-  function toggleAusbauNode(
-    powerId: string,
-    tier: 'gesellen' | 'experten' | 'meister',
-    nodeId: string,
-  ): void {
-    _mutate(c => {
-      const p = c.acquiredPowers.find(x => x.id === powerId)
-      if (!p?.ausbauNodes) return
-      const node = p.ausbauNodes[tier].find(n => n.id === nodeId)
-      if (node) node.active = !node.active
-    })
-  }
-
   function removePower(id: string): void {
     _mutate(c => { c.acquiredPowers = c.acquiredPowers.filter(p => p.id !== id) })
+  }
+
+  function reorderPowers(orderedIds: string[]): void {
+    _mutate(c => {
+      const map = new Map(c.acquiredPowers.map(p => [p.id, p]))
+      c.acquiredPowers = orderedIds.map(id => map.get(id)).filter(Boolean) as AcquiredPower[]
+    })
   }
 
   // ---------------------------------------------------------------------------
@@ -308,8 +397,22 @@ export const useCharacterStore = defineStore('character', () => {
     _mutate(c => { c.activeGameEffects.push({ ...effect, id: uid() }) })
   }
 
+  function updateGameEffect(id: string, data: Partial<Omit<GameEffect, 'id'>>): void {
+    _mutate(c => {
+      const e = c.activeGameEffects.find(x => x.id === id)
+      if (e) Object.assign(e, data)
+    })
+  }
+
   function removeGameEffect(id: string): void {
     _mutate(c => { c.activeGameEffects = c.activeGameEffects.filter(e => e.id !== id) })
+  }
+
+  function reorderGameEffects(orderedIds: string[]): void {
+    _mutate(c => {
+      const map = new Map(c.activeGameEffects.map(e => [e.id, e]))
+      c.activeGameEffects = orderedIds.map(id => map.get(id)).filter(Boolean) as GameEffect[]
+    })
   }
 
   // ---------------------------------------------------------------------------
@@ -343,15 +446,14 @@ export const useCharacterStore = defineStore('character', () => {
   }
 
   async function importCharacterJSON(json: string): Promise<void> {
-    const data = JSON.parse(json) as Character
+    const data = JSON.parse(json) as Record<string, unknown>
     if (typeof data.schemaVersion !== 'number') {
       throw new Error('Ungültiges Charakterformat: schemaVersion fehlt')
     }
     if (data.schemaVersion > SCHEMA_VERSION) {
       throw new Error(`Charakterversion ${data.schemaVersion} wird nicht unterstützt`)
     }
-    // Einfache Migration: fehlende Felder mit Defaults auffüllen
-    const migrated: Character = { ...createNewCharacter(data.id ?? uid()), ...data }
+    const migrated = migrateCharacter(data)
     const existing = characters.value.findIndex(c => c.id === migrated.id)
     if (existing !== -1) {
       characters.value[existing] = migrated
@@ -376,6 +478,7 @@ export const useCharacterStore = defineStore('character', () => {
     maxIdeen,
     maxCoups,
     skillTotal,
+    activeBonusTotal,
     // Charakter-Verwaltung
     loadFromDB,
     createCharacter,
@@ -393,13 +496,22 @@ export const useCharacterStore = defineStore('character', () => {
     updateStatusEffect,
     // Skills
     updateSkillValue,
-    setSkillBonus,
+    reorderFightingSkills,
+    addSkillBonus,
+    updateSkillBonus,
+    removeSkillBonus,
+    toggleSkillBonus,
     addCustomSkill,
     removeCustomSkill,
     // Waffen
     addWeapon,
     updateWeapon,
     removeWeapon,
+    reorderWeapons,
+    addWeaponBonus,
+    updateWeaponBonus,
+    removeWeaponBonus,
+    toggleWeaponBonus,
     // Kleidungssets
     addClothingSet,
     updateClothingSet,
@@ -409,6 +521,7 @@ export const useCharacterStore = defineStore('character', () => {
     addInventoryItem,
     updateInventoryItem,
     removeInventoryItem,
+    reorderInventory,
     // Gefolge
     addCompanion,
     updateCompanion,
@@ -416,11 +529,13 @@ export const useCharacterStore = defineStore('character', () => {
     // Kräfte
     addPower,
     updatePower,
-    toggleAusbauNode,
     removePower,
+    reorderPowers,
     // Taktik
     addGameEffect,
+    updateGameEffect,
     removeGameEffect,
+    reorderGameEffects,
     // Journal
     addJournalNote,
     updateJournalNote,

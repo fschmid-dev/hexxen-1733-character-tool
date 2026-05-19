@@ -23,7 +23,9 @@
       "Bash(sed -n '270,280p' /home/fschmid/prj/pnp/hexxen-character-tool/src/layouts/CharacterLayout.vue)",
       "Bash(sed -n '65,72p' /home/fschmid/prj/pnp/hexxen-character-tool/src/components/character/CombatPanel.vue)",
       "Bash(sed -n '18,25p' /home/fschmid/prj/pnp/hexxen-character-tool/src/components/character/EquipmentPanel.vue)",
-      "Bash(sed -n '57,64p' /home/fschmid/prj/pnp/hexxen-character-tool/src/components/character/EquipmentPanel.vue)"
+      "Bash(sed -n '57,64p' /home/fschmid/prj/pnp/hexxen-character-tool/src/components/character/EquipmentPanel.vue)",
+      "Bash(npm run *)",
+      "Bash(npx eslint *)"
     ]
   }
 }

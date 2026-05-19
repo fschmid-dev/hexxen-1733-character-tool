@@ -2,11 +2,14 @@
   <q-layout view="hHh LpR fFf">
     <q-header class="bg-primary text-white">
 
-      <!-- Titelleiste -->
+      <!-- Titelleiste: Name + Stufe/Volk/Rolle kompakt rechts -->
       <q-toolbar>
         <q-btn flat round dense icon="arrow_back" @click="$router.push('/characters')" />
-        <q-toolbar-title class="text-weight-bold text-subtitle1 ellipsis">
-          {{ char?.name ?? '–' }}
+        <q-toolbar-title class="q-py-xs" style="line-height: 1.2">
+          <div class="text-weight-bold text-subtitle1 ellipsis">{{ char?.name ?? '–' }}</div>
+          <div v-if="char" class="text-caption" style="opacity: 0.75; line-height: 1.2">
+            Stufe {{ char.level }}<span v-if="char.volk">&nbsp;·&nbsp;{{ char.volk }}</span><span v-if="activeRole">&nbsp;·&nbsp;{{ activeRole }}</span>
+          </div>
         </q-toolbar-title>
         <q-btn flat round dense icon="menu_book" title="Journal öffnen" @click="showJournal = true" />
         <q-btn flat round dense :icon="themeIcon" :title="themeTitle" @click="toggleTheme" />
@@ -31,19 +34,12 @@
         </q-btn>
       </q-toolbar>
 
-      <!-- Sticky Stats-Bereich -->
+      <!-- Sticky Stats-Bereich (ohne Stufe/Volk/Rolle – jetzt im Toolbar) -->
       <div v-if="char" class="q-px-sm q-pb-xs">
         <div class="char-content-frame">
           <div class="stats-box q-pa-sm">
 
-            <!-- Zeile 1: Stufe · Volk · Rolle -->
-            <div class="row items-center q-gutter-xs q-mb-sm">
-              <span class="text-caption">Stufe {{ char.level }}</span>
-              <span v-if="char.volk" class="text-caption" style="opacity:.7">· {{ char.volk }}</span>
-              <span v-if="activeRole" class="text-caption text-weight-medium" style="opacity:.85">· {{ activeRole }}</span>
-            </div>
-
-            <!-- Zeile 2: Panzerung | AP | Initiative -->
+            <!-- Zeile 1: Panzerung | AP | Initiative -->
             <div class="row justify-between items-center q-mb-sm" style="gap:8px">
               <!-- Panzerung -->
               <div class="col-auto">
@@ -92,7 +88,7 @@
 
             <div style="height:1px;background:rgba(255,255,255,0.18);margin-bottom:8px" />
 
-            <!-- Zeile 3: Max-LEP | Aktuelle LEP | Puffer-LEP -->
+            <!-- Zeile 2: Max-LEP | Aktuelle LEP | Puffer-LEP -->
             <div class="row justify-between items-center" style="gap:8px">
               <!-- Max-LEP -->
               <div class="col-auto">
@@ -158,7 +154,7 @@
           <q-tab name="skills"    label="Fertigkeiten" />
           <q-tab name="combat"    label="Kampf"        />
           <q-tab name="powers"    label="Kräfte"       />
-          <q-tab name="equipment" label="Ausrüstung"   />
+          <q-tab name="equipment" label="Inventar"     />
           <q-tab name="tactics"   label="Taktik"       />
         </q-tabs>
       </div>

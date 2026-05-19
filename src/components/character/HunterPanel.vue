@@ -25,24 +25,7 @@
       </q-card-section>
     </q-card>
 
-    <!-- Profession -->
-    <div class="text-overline text-primary q-mb-xs">Profession</div>
-    <q-card flat bordered class="q-mb-sm">
-      <q-card-section class="q-pa-sm q-gutter-xs">
-        <q-input
-          :model-value="char.profession"
-          label="Profession" dense
-          @update:model-value="v => store.updateField('profession', String(v))"
-        />
-        <q-input
-          :model-value="char.masterProfession"
-          label="Meisterprofession" dense
-          @update:model-value="v => store.updateField('masterProfession', String(v))"
-        />
-      </q-card-section>
-    </q-card>
-
-    <!-- Rollen -->
+    <!-- Rollen (jetzt vor Profession) -->
     <div class="text-overline text-primary q-mb-xs">Rollen</div>
     <q-card flat bordered class="q-mb-sm">
       <q-card-section class="q-pa-sm q-gutter-xs">
@@ -64,6 +47,23 @@
       </q-card-section>
     </q-card>
 
+    <!-- Profession -->
+    <div class="text-overline text-primary q-mb-xs">Profession</div>
+    <q-card flat bordered class="q-mb-sm">
+      <q-card-section class="q-pa-sm q-gutter-xs">
+        <q-input
+          :model-value="char.profession"
+          label="Profession" dense
+          @update:model-value="v => store.updateField('profession', String(v))"
+        />
+        <q-input
+          :model-value="char.masterProfession"
+          label="Meisterprofession" dense
+          @update:model-value="v => store.updateField('masterProfession', String(v))"
+        />
+      </q-card-section>
+    </q-card>
+
     <!-- Motivation (optional) -->
     <template v-if="char.settings.useOptionalMotivations">
       <div class="text-overline text-primary q-mb-xs">Motivation</div>
@@ -74,10 +74,13 @@
             label="Name der Motivation" dense
             @update:model-value="v => store.updateField('motivation', { ...char!.motivation, name: String(v) })"
           />
-          <q-input
+          <div class="text-caption text-grey-6 q-mb-xs">Auswirkung</div>
+          <q-editor
             :model-value="char.motivation.effectText"
-            label="Auswirkung" type="textarea" rows="3" dense
-            @update:model-value="v => store.updateField('motivation', { ...char!.motivation, effectText: String(v) })"
+            min-height="4rem"
+            :toolbar="editorToolbar"
+            :definitions="editorDefinitions"
+            @update:model-value="v => store.updateField('motivation', { ...char!.motivation, effectText: v })"
           />
         </q-card-section>
       </q-card>
@@ -89,6 +92,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { useCharacterStore } from 'src/stores/characterStore'
+import { editorToolbar, editorDefinitions } from 'src/composables/useEditorConfig'
 
 const store = useCharacterStore()
 const char = computed(() => store.activeCharacter)

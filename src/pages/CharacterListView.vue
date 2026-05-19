@@ -9,7 +9,8 @@
       >
         <template #prepend><q-icon name="search" /></template>
       </q-input>
-      <q-btn flat round icon="upload_file" title="Charakter importieren" @click="onImport" />
+      <q-btn flat round icon="upload_file" title="Aus Datei importieren" @click="onImportFile" />
+      <q-btn flat round icon="content_paste" title="Aus JSON-Text importieren" @click="showImportDialog = true" />
     </div>
 
     <!-- Leerzustand -->
@@ -102,6 +103,27 @@
       </q-card>
     </q-dialog>
 
+    <!-- Import aus JSON-Text Dialog -->
+    <q-dialog v-model="showImportDialog">
+      <q-card style="min-width: 340px; max-width: 600px">
+        <q-card-section><div class="text-h6">Charakter aus JSON importieren</div></q-card-section>
+        <q-card-section>
+          <q-input
+            v-model="importJson"
+            type="textarea"
+            label="JSON hier einfügen"
+            rows="10"
+            outlined
+            autofocus
+          />
+        </q-card-section>
+        <q-card-actions align="right">
+          <q-btn flat label="Abbrechen" v-close-popup />
+          <q-btn color="primary" label="Importieren" :disable="!importJson.trim()" @click="onImportJson" />
+        </q-card-actions>
+      </q-card>
+    </q-dialog>
+
     <!-- Hidden import input -->
     <input ref="fileInput" type="file" accept=".json" style="display:none" @change="onFileSelected" />
   </q-page>
@@ -187,18 +209,32 @@ async function createCharacter() {
   void router.push(`/characters/${id}`)
 }
 
-// Import
+// Import aus Datei
 const fileInput = ref<HTMLInputElement | null>(null)
-function onImport() { fileInput.value?.click() }
+function onImportFile() { fileInput.value?.click() }
 async function onFileSelected(e: Event) {
   const file = (e.target as HTMLInputElement).files?.[0]
   if (!file) return
+  await doImport(await file.text())
+  if (fileInput.value) fileInput.value.value = ''
+}
+
+// Import aus JSON-Text
+const showImportDialog = ref(false)
+const importJson = ref('')
+
+async function onImportJson() {
+  await doImport(importJson.value)
+  showImportDialog.value = false
+  importJson.value = ''
+}
+
+async function doImport(json: string) {
   try {
-    await store.importCharacterJSON(await file.text())
+    await store.importCharacterJSON(json)
     $q.notify({ type: 'positive', message: 'Charakter importiert' })
   } catch (err) {
     $q.notify({ type: 'negative', message: `Import fehlgeschlagen: ${err instanceof Error ? err.message : ''}` })
   }
-  if (fileInput.value) fileInput.value.value = ''
 }
 </script>

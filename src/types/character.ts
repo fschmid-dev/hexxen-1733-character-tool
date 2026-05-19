@@ -1,4 +1,4 @@
-export const SCHEMA_VERSION = 1
+export const SCHEMA_VERSION = 2
 
 // ---------------------------------------------------------------------------
 // Sub-Modelle
@@ -7,9 +7,11 @@ export const SCHEMA_VERSION = 1
 export type AttributeKey = 'kkr' | 'ath' | 'ges' | 'sin' | 'wis' | 'wil'
 
 export interface ManualBonus {
+  id: string
   value: number
   badgeText: string
   description: string
+  active: boolean
 }
 
 export interface Skill {
@@ -18,7 +20,7 @@ export interface Skill {
   baseAttribute: AttributeKey
   value: number         // Steigerungswert 0–4
   isCustom: boolean
-  manualBonus?: ManualBonus
+  manualBonuses?: ManualBonus[]
 }
 
 export interface WeaponSkill {
@@ -31,17 +33,19 @@ export interface WeaponSkill {
   notes: string
   value: number          // Fertigkeitswert 0–4
   isCustom: boolean
-  manualBonus?: ManualBonus
+  manualBonuses?: ManualBonus[]
 }
 
 export interface Weapon {
   id: string
   name: string
+  skillId?: string        // optional: verknüpfte Fertigkeit (fighting oder general)
   baseDamage: number
   apCost: number
   parryModifier: string
   notes: string
   isActive: boolean
+  manualBonuses?: ManualBonus[]
 }
 
 export interface ClothingSet {
@@ -56,6 +60,7 @@ export interface InventoryItem {
   name: string
   quantity: number
   notes: string
+  showOnStatus?: boolean
 }
 
 export interface AcquiredPower {
@@ -82,7 +87,7 @@ export interface AcquiredPower {
 
 export interface GameEffect {
   id: string
-  trigger: 'Passiv' | 'Kampfbeginn' | 'Ini0' | 'EinmalProKampf' | 'SkillProbe' | 'Sonstiges'
+  trigger: string       // freier Text, z.B. 'Passiv', 'Kampfbeginn', oder eigener Wert
   sourceName: string
   description: string
 }
@@ -335,4 +340,31 @@ export function createDefaultCompendium(): Compendium {
     clothingSets: [],
     weapons: [],
   }
+}
+
+// ---------------------------------------------------------------------------
+// Migration
+// ---------------------------------------------------------------------------
+
+/** Migriert einen Charakter von einer älteren schemaVersion auf die aktuelle. */
+export function migrateCharacter(raw: Record<string, unknown>): Character {
+  const base = createNewCharacter((raw.id as string) ?? 'unknown')
+  const merged = { ...base, ...raw }
+
+  // v1 → v2: manualBonus (Einzelobjekt) → manualBonuses (Array)
+  if ((raw.schemaVersion as number) < 2) {
+    const migrateSkillBonuses = <T extends { manualBonus?: unknown; manualBonuses?: ManualBonus[] }>(skill: T): T => {
+      if (skill.manualBonus && !skill.manualBonuses) {
+        const old = skill.manualBonus as { value: number; badgeText: string; description: string }
+        skill.manualBonuses = [{ id: `migrated-${Date.now()}`, ...old, active: true }]
+      }
+      delete (skill as Record<string, unknown>).manualBonus
+      return skill
+    }
+    merged.skills.general = merged.skills.general.map(migrateSkillBonuses)
+    merged.skills.fighting = merged.skills.fighting.map(migrateSkillBonuses)
+    merged.schemaVersion = 2
+  }
+
+  return merged
 }
