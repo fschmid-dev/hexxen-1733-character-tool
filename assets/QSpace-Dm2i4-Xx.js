@@ -1,0 +1,1 @@
+import{$t as e,Mt as t}from"./index-CnXm0LNm.js";var n=t({name:`QSpace`,setup(){let t=e(`div`,{class:`q-space`});return()=>t}});export{n as t};

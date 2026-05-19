@@ -1,0 +1,1 @@
+import{t as e}from"./wrappers-kn2W8n5c.js";import{l as t}from"./database-Bd28s7ny.js";import{t as n}from"./characterStore-A2KUtiPf.js";import{t as r}from"./compendiumStore-7q5EZigv.js";var i=e(async({app:e})=>{let i=t();e.use(i);let a=n(i),o=r(i);await Promise.all([a.loadFromDB(),o.loadFromDB()])});export{i as default};
