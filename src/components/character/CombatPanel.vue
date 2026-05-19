@@ -24,7 +24,7 @@
                 {{ weapon.name }}
                 <q-badge v-if="weapon.skillId" color="grey-6" class="q-ml-xs" size="xs"
                   :label="linkedSkillName(weapon.skillId)" />
-                <template v-for="bonus in (weapon.manualBonuses ?? []).filter(b => b.active)" :key="bonus.id">
+                <template v-for="bonus in activeBonuses(weapon.manualBonuses)" :key="bonus.id">
                   <q-badge v-if="bonus.badgeText" color="amber-9" class="q-ml-xs" size="xs" :label="bonus.badgeText" />
                 </template>
               </q-item-label>
@@ -74,7 +74,7 @@
               <div class="row no-wrap items-center q-gutter-xs q-mb-xs">
                 <div class="col text-body2 text-weight-medium" style="min-width:0">{{ skill.name }}</div>
                 <q-badge :color="['kkr','ath','ges'].includes(skill.baseAttribute) ? 'deep-orange-7' : 'green-7'" :label="skill.baseAttribute.toUpperCase()" />
-                <template v-for="bonus in (skill.manualBonuses ?? []).filter(b => b.active)" :key="bonus.id">
+                <template v-for="bonus in activeBonuses(skill.manualBonuses)" :key="bonus.id">
                   <q-badge v-if="bonus.badgeText" color="amber-9" :label="bonus.badgeText" />
                 </template>
               </div>
@@ -96,7 +96,7 @@
                   @click="store.updateSkillValue(skill.id, skill.value + 1)" />
                 <span class="text-caption text-grey-5">=</span>
                 <span class="text-subtitle2 text-weight-bold text-primary">
-                  {{ skill.value + char.attributes[skill.baseAttribute] }}
+                  {{ skill.value + attrValue(skill) }}
                 </span>
                 <span
                   v-if="activeBonusSum(skill.manualBonuses) !== 0"
@@ -251,6 +251,14 @@ const char = computed(() => store.activeCharacter)
 
 function activeBonusSum(bonuses?: ManualBonus[]) {
   return bonuses?.filter(b => b.active).reduce((s, b) => s + b.value, 0) ?? 0
+}
+
+function activeBonuses(bonuses?: ManualBonus[]): ManualBonus[] {
+  return bonuses?.filter(b => b.active) ?? []
+}
+
+function attrValue(skill: WeaponSkill): number {
+  return char.value?.attributes[skill.baseAttribute] ?? 0
 }
 
 // Skill-Optionen mit Gruppen-Headern
